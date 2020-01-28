@@ -25,9 +25,9 @@ public class test extends LinearOpMode {
     private DcMotor bl;
     private DcMotor fr;
     private DcMotor br;
-   // private ColorSensor cs;
+    // private ColorSensor cs;
     private BNO055IMU imu;
-   // private Servo arm;
+    // private Servo arm;
 
 
     @Override
@@ -47,12 +47,13 @@ public class test extends LinearOpMode {
         bl = hardwareMap.dcMotor.get("bl");
         fr = hardwareMap.dcMotor.get("fr");
         br = hardwareMap.dcMotor.get("br");
-       // cs = hardwareMap.colorSensor.get("cs"); (FOR USE WITH COLOR SENSOR SKYSTONE DETECTION)
+        // cs = hardwareMap.colorSensor.get("cs"); (FOR USE WITH COLOR SENSOR SKYSTONE DETECTION)
         imu = hardwareMap.get(BNO055IMU.class, "imu");
-       // arm = hardwareMap.servo.get("arm");
+        // arm = hardwareMap.servo.get("arm");
         // lift = hardwareMap.dcMotor.get("lift");
         fl.setDirection(DcMotorSimple.Direction.REVERSE);
         bl.setDirection(DcMotorSimple.Direction.REVERSE);
+        int strafeMode = 1;
 
 
         initIMU();
@@ -63,15 +64,8 @@ public class test extends LinearOpMode {
 
             //set a power and direction for strafe. Since we have a wicked fast drivetrain, 25% is a good test speed
 
-            fl.setPower(0.25);
-            bl.setPower(-0.25);
-            fr.setPower(-0.25);
-            br.setPower(0.25);
-            while (opModeIsActive()) {
 
-                angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-
-               // HI = Color.rgb(cs.red(), cs.green(), cs.blue()); (FOR USE WITH COLOR SENSOR SKYSTONE DETECTION)
+            // HI = Color.rgb(cs.red(), cs.green(), cs.blue()); (FOR USE WITH COLOR SENSOR SKYSTONE DETECTION)
 
 
                     /*the correction variable is set to keep the robot centered at 0 while strafing to the right.
@@ -92,7 +86,7 @@ public class test extends LinearOpMode {
 
                     correction = Math.abs(Math.abs(angles.firstAngle - 0) * 0.015);
 
-                    If we want to center at -90 degrees, then we need to add 90 (where it subtracts 0)
+                    If we want to center at -90 degrees, then we need to set the variable angle to -90.
                     We do this as the robot would be at -90, and by adding 90, it would bring the correction power to 0
                     So if its at -90, it would add 90 and see that no adjustment is needed.
                     We then make sure that the value is the transformed into the absolute value, because, well
@@ -109,26 +103,44 @@ public class test extends LinearOpMode {
 
                      */
 
-                if (angles.firstAngle <= 0 && opModeIsActive()) { //change the angle here if necessary to match your desired center direction
+                     /*note that if you plan on strafing to the other direction, you will have to change the power outputs to
+                   correct the left side wheels instead of the right. If you want to strafe in to the right, set
+                  strafeMode to 1. If you want to strafe to the left, set strafeMode to 2.
 
-                    correction = Math.abs(Math.abs(angles.firstAngle - 0) * 0.015);
+                 */
 
-                    gravity = imu.getGravity();
-                    br.setPower(0.25 + correction);
-                    if (angles.firstAngle >= 0) { //change the angle here if necessary to match your desired center direction
-                        br.setPower(0.25);
-                    }
-                }
-                if (angles.firstAngle >= 0 && opModeIsActive()) { //change the angle here if necessary to match your desired center direction
-                    correction = Math.abs(Math.abs(angles.firstAngle - 0) * 0.015);
+            if (strafeMode == 1) {
+                fl.setPower(0.25);
+                bl.setPower(-0.25);
+                fr.setPower(-0.25);
+                br.setPower(0.25);
+                while (opModeIsActive()) {
+
                     angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-                    gravity = imu.getGravity();
-                    fr.setPower(-0.25 - correction);
-                    if (angles.firstAngle <= 0) { //change the angle here if necessary to match your desired center direction
-                        fr.setPower(-0.25);
 
+                    int angle = 90; //this is the angle you want the robot to center at.
+
+
+                    if (angles.firstAngle <= angle && opModeIsActive()) { //change the angle here if necessary to match your desired center direction
+
+                        correction = Math.abs(Math.abs(angles.firstAngle - angle) * 0.015);
+
+                        gravity = imu.getGravity();
+                        br.setPower(0.25 + correction);
+                        if (angles.firstAngle >= angle) { //change the angle here if necessary to match your desired center direction
+                            br.setPower(0.25);
+                        }
                     }
-                }
+                    if (angles.firstAngle >= angle && opModeIsActive()) { //change the angle here if necessary to match your desired center direction
+                        correction = Math.abs(Math.abs(angles.firstAngle - angle) * 0.015);
+                        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+                        gravity = imu.getGravity();
+                        fr.setPower(-0.25 - correction);
+                        if (angles.firstAngle <= angle) { //change the angle here if necessary to match your desired center direction
+                            fr.setPower(-0.25);
+
+                        }
+                    }
                /* FOR USE WITH COLOR SENSOR SKYSTONE DETECTION:
 
                if ((cs.red() * cs.green()) / Math.pow(cs.blue(), 2) <= 3) {
@@ -154,9 +166,48 @@ public class test extends LinearOpMode {
                 }
 
                 */
+                }
+            }
+
+
+            if (strafeMode == 2) {
+                fl.setPower(-0.25);
+                bl.setPower(0.25);
+                fr.setPower(0.25);
+                br.setPower(-0.25);
+                while (opModeIsActive()) {
+
+                    angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+
+                    int angle = 0; //this is the angle you want the robot to center at.
+
+
+                    if (angles.firstAngle <= angle && opModeIsActive()) {
+
+                        correction = Math.abs(Math.abs(angles.firstAngle - angle) * 0.015);
+
+                        gravity = imu.getGravity();
+                        fl.setPower(-0.25 - correction);
+                        if (angles.firstAngle >= angle) {
+                            fl.setPower(-0.25);
+                        }
+                    }
+                    if (angles.firstAngle >= angle && opModeIsActive()) {
+                        correction = Math.abs(Math.abs(angles.firstAngle - angle) * 0.015); // change the 0.015 to a higher number for greater correction power
+                        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+                        gravity = imu.getGravity();
+                        bl.setPower(0.25 + correction);
+                        if (angles.firstAngle <= angle) {
+                            bl.setPower(0.25);
+
+                        }
+                    }
+                }
             }
         }
-    }
+
+
+        }
 
     /* What's likely causing some of your strafe issues is your encoders. To test this, run two opmodes, one that strafes
     just time and power, and another using the run to position function. We don't trust encoders, so we've made a special
@@ -195,30 +246,31 @@ public class test extends LinearOpMode {
        break;}
 
      */
-    private void initIMU() {
+        private void initIMU () {
 
 
-        BNO055IMU.Parameters imuParameters;
-        double adjPower;
+            BNO055IMU.Parameters imuParameters;
+            double adjPower;
 
-        imuParameters = new BNO055IMU.Parameters();
-        adjPower = 150;
-        imuParameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        imuParameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        imuParameters.loggingEnabled = false;
-        imu.initialize(imuParameters);
+            imuParameters = new BNO055IMU.Parameters();
+            adjPower = 150;
+            imuParameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+            imuParameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+            imuParameters.loggingEnabled = false;
+            imu.initialize(imuParameters);
+        }
+
+        private void posCheck () {
+            fl.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            bl.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            fr.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            br.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            fl.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            bl.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            fr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            br.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        }
     }
 
-    private void posCheck() {
-        fl.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        bl.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        fr.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        br.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        fl.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        bl.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        fr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        br.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-    }
-}
 
 //Created by Jaivir Parmar of Team 17557 Kinetix
